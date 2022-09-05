@@ -64,13 +64,15 @@ body{
     color:#FFE5B4;
     font-family: 'DynaPuff', cursive;
     padding: 10px;
-    width: 120px;
 }
 #battle-arena{
     align-items: center;
     display: flex;
     flex-direction: column;
     justify-content:center;
+}
+.button-attack{
+    font-size: 24px;
 }
 #battle-arena-result, #battle-result{
     color:#FFE5B4;

@@ -1,25 +1,24 @@
 const sectionBattleArena = document.getElementById('battle-arena')
 const buttonPlayerMokepon=document.getElementById('button-mokepon')
-const buttonfire=document.getElementById('button-fire')
-const buttonwatter=document.getElementById('button-watter')
-const buttonplant=document.getElementById('button-plant')
 const buttonRestart = document.getElementById('button-restart')
-const inputHipodoge = document.getElementById('hipodoge')
-const inputCapipepo = document.getElementById('capipepo')
-const inputRatigueya = document.getElementById('ratigueya')
 const spanMokeponPlayer = document.getElementById('mokepon-player')
 const imgMokeponPlayer= document.getElementById('img-mokepon-player')
 const sectionChooseMokepon = document.getElementById('choose-mokepon')
 const spanMokeponOpponent = document.getElementById('mokepon-opponent')
 const imgMokeponOpponent= document.getElementById('img-mokepon-opponent')
 
+const contentMokepon=document.getElementById('content-mokepon')
+const contentAttacks=document.getElementById('content-attacks')
+
 const maxbarlives=100
-const maxlives=3
+const maxgames=5
 let mokepons=[]
-let attackplayer
-let attackopponent
-let playerlives=maxlives
-let opponetlives=maxlives
+let attacksplayer=[]
+let attacksopponent=[]
+let playerMokepon
+let opponentMokepon
+let playerVictories=0
+let opponentVictories=0
 
 class Mokepon{
     constructor(name,image,lives){
@@ -33,113 +32,147 @@ class Mokepon{
 let hipodoge = new Mokepon('Hipodoge', './assets/mokepons_mokepon_hipodoge_attack.png', 5)
 let capipepo = new Mokepon('Capipepo', './assets/mokepons_mokepon_capipepo_attack.png', 5)
 let ratigueya = new Mokepon('Ratigueya', './assets/mokepons_mokepon_ratigueya_attack.png', 5)
+let pydos = new Mokepon('Pydos', './assets/mokepons_mokepon_pydos_attack.png', 5)
+let tucapalma = new Mokepon('Tucapalma', './assets/mokepons_mokepon_tucapalma_attack.png', 5)
+let langostelvis = new Mokepon('Langostelvis', './assets/mokepons_mokepon_langostelvis_attack.png', 5)
 
 hipodoge.attacks.push(
-    {name:'💧', id:'button-watter'},
-    {name:'💧', id:'button-watter'},
-    {name:'💧', id:'button-watter'},
-    {name:'🔥', id:'button-fire'},
-    {name:'🌱', id:'button-plant'},
+    {name:'💧', id:'button-watter',desc:'AGUA'},
+    {name:'💧', id:'button-watter',desc:'AGUA'},
+    {name:'💧', id:'button-watter',desc:'AGUA'},
+    {name:'🔥', id:'button-fire',desc:'FUEGO'},
+    {name:'🌱', id:'button-plant',desc:'PLANTA'},
 )
 capipepo.attacks.push(
-    {name:'🌱', id:'button-plant'},
-    {name:'🌱', id:'button-plant'},
-    {name:'🌱', id:'button-plant'},
-    {name:'💧', id:'button-watter'},
-    {name:'🔥', id:'button-fire'},
+    {name:'🌱', id:'button-plant',desc:'PLANTA'},
+    {name:'🌱', id:'button-plant',desc:'PLANTA'},
+    {name:'🌱', id:'button-plant',desc:'PLANTA'},
+    {name:'💧', id:'button-watter',desc:'AGUA'},
+    {name:'🔥', id:'button-fire',desc:'FUEGO'},
 )
 ratigueya.attacks.push(
-    {name:'🔥', id:'button-fire'},
-    {name:'🔥', id:'button-fire'},
-    {name:'🔥', id:'button-fire'},
-    {name:'💧', id:'button-watter'},
-    {name:'🌱', id:'button-plant'},
+    {name:'🔥', id:'button-fire',desc:'FUEGO'},
+    {name:'🔥', id:'button-fire',desc:'FUEGO'},
+    {name:'🔥', id:'button-fire',desc:'FUEGO'},
+    {name:'💧', id:'button-watter',desc:'AGUA'},
+    {name:'🌱', id:'button-plant',desc:'PLANTA'},
 )
-mokepons.push(hipodoge,capipepo,ratigueya)
+pydos.attacks.push(
+    {name:'💧', id:'button-watter',desc:'AGUA'},
+    {name:'💧', id:'button-watter',desc:'AGUA'},
+    {name:'💧', id:'button-watter',desc:'AGUA'},
+    {name:'🔥', id:'button-fire',desc:'FUEGO'},
+    {name:'🌱', id:'button-plant',desc:'PLANTA'},
+)
+tucapalma.attacks.push(
+    {name:'🌱', id:'button-plant',desc:'PLANTA'},
+    {name:'🌱', id:'button-plant',desc:'PLANTA'},
+    {name:'🌱', id:'button-plant',desc:'PLANTA'},
+    {name:'💧', id:'button-watter',desc:'AGUA'},
+    {name:'🔥', id:'button-fire',desc:'FUEGO'},
+)
+langostelvis.attacks.push(
+    {name:'🔥', id:'button-fire',desc:'FUEGO'},
+    {name:'🔥', id:'button-fire',desc:'FUEGO'},
+    {name:'🔥', id:'button-fire',desc:'FUEGO'},
+    {name:'💧', id:'button-watter',desc:'AGUA'},
+    {name:'🌱', id:'button-plant',desc:'PLANTA'},
+)
+mokepons.push(hipodoge,capipepo,ratigueya,pydos,tucapalma,langostelvis)
 function startGame(){
     sectionBattleArena.style.display = 'none'
+    mokepons.forEach((mokepon) =>{
+        let mokeponoptions=`
+        <input type="radio" name="mokepon" id=${mokepon.name} />
+        <label class="card-mokepon" for=${mokepon.name}>
+            <p>${mokepon.name}</p>
+            <img src=${mokepon.image} alt=${mokepon.name}>
+        </label>
+        `
+        contentMokepon.innerHTML+=mokeponoptions
+    })
     buttonPlayerMokepon.addEventListener('click', choosePlayerMokepon)
-    buttonfire.addEventListener('click', attackfire)
-    buttonwatter.addEventListener('click', attackwatter)
-    buttonplant.addEventListener('click', attackplant)
-    buttonRestart.disabled=true
+    buttonRestart.style.visibility="hidden"
     buttonRestart.addEventListener('click', restartGame)
 }
 function choosePlayerMokepon(){
-    if (inputHipodoge.checked || inputCapipepo.checked || inputRatigueya.checked){
-        sectionChooseMokepon.style.display = 'none'
-        sectionBattleArena.style.display = 'flex'       
-        if (inputHipodoge.checked){
-            spanMokeponPlayer.innerHTML = 'Hipodoge'
-            imgMokeponPlayer.alt='Hipodoge'
-            imgMokeponPlayer.src='./assets/mokepons_mokepon_hipodoge_attack.png'
-        } else if (inputCapipepo.checked){
-            spanMokeponPlayer.innerHTML = 'Capipepo'
-            imgMokeponPlayer.alt='Capipepo'
-            imgMokeponPlayer.src='./assets/mokepons_mokepon_capipepo_attack.png'
-        } else{
-            spanMokeponPlayer.innerHTML = 'Ratigueya'
-            imgMokeponPlayer.alt='Ratigueya'
-            imgMokeponPlayer.src='./assets/mokepons_mokepon_ratigueya_attack.png'
-        }
-        chooseOpponentMokepon() 
-    }
+    let inputcheck=false
+    let index=0
+    let inputmokepons=document.querySelectorAll('.cards input')
+    inputmokepons.forEach((inputmokepon)=>{
+        if (inputmokepon.checked){
+            inputcheck=true
+            sectionChooseMokepon.style.display = 'none'
+            sectionBattleArena.style.display = 'flex'
+            playerMokepon=mokepons[index]
+            spanMokeponPlayer.innerHTML = playerMokepon.name
+            imgMokeponPlayer.alt = playerMokepon.name
+            imgMokeponPlayer.src=playerMokepon.image            
+            showAttacks(playerMokepon.attacks)
+            return
+        }    
+        index++    
+    })
+    if (inputcheck)
+        chooseOpponentMokepon()
     else
         alert('Selecciona un mokepon')
 }
+function showAttacks(attacks){
+    attacks.forEach((attack) =>{
+        let mokeponAttacks=`
+        <button id=${attack.id} class="button-attack" value=${attack.desc} >${attack.name}</button>
+        `
+        contentAttacks.innerHTML+=mokeponAttacks
+    })
+}
+function sequenceAttacks(){
+    let buttonsAttacks=document.querySelectorAll('.button-attack')
+    buttonsAttacks.forEach((buttonAttack) => {
+        buttonAttack.addEventListener('click', (e) => {
+            attacksplayer.push(buttonAttack.value)
+            buttonAttack.style.background='#001D6E'
+            buttonAttack.disabled=true
+            opponentRandomAttack()
+        })
+    })
+}
 function chooseOpponentMokepon(){
-    let mokeponRandomnumber = randomnumber(1,3)
-    if (mokeponRandomnumber == 1) {
-        spanMokeponOpponent.innerHTML = 'Hipodoge'
-        imgMokeponOpponent.alt='Hipodoge'
-        imgMokeponOpponent.src='./assets/mokepons_mokepon_hipodoge_attack.png'
-    } else if (mokeponRandomnumber == 2) {
-        spanMokeponOpponent.innerHTML = 'Capipepo'
-        imgMokeponOpponent.alt='Capipepo'
-        imgMokeponOpponent.src='./assets/mokepons_mokepon_capipepo_attack.png'
-    } else {
-        spanMokeponOpponent.innerHTML = 'Ratigueya'
-        imgMokeponOpponent.alt='Ratigueya'
-        imgMokeponOpponent.src='./assets/mokepons_mokepon_ratigueya_attack.png'
-    }
+    let mokeponRandomnumber = randomnumber(0,mokepons.length-1)
+    opponentMokepon=mokepons[mokeponRandomnumber]
+    spanMokeponOpponent.innerHTML = opponentMokepon.name
+    imgMokeponOpponent.alt=opponentMokepon.name
+    imgMokeponOpponent.src=opponentMokepon.image
+    sequenceAttacks()        
 }
-function attackfire(){
-    attackplayer='FUEGO'
-    attackalaeaotoriooponente()
-}
-function attackwatter(){
-    attackplayer='AGUA'
-    attackalaeaotoriooponente()
-}
-function attackplant(){
-    attackplayer='PLANTA'
-    attackalaeaotoriooponente()
-}
-function attackalaeaotoriooponente(){
-    let attack=randomnumber(1,3)
-    if (attack==1)
-        attackopponent='FUEGO'
-    else if (attack==2)
-        attackopponent='AGUA'
-    else
-        attackopponent='PLANTA'
+function opponentRandomAttack(){
+    let attackindex=randomnumber(0,opponentMokepon.attacks.length-1)
+    attacksopponent.push(opponentMokepon.attacks[attackindex].desc)
+    opponentMokepon.attacks.splice(attackindex,1)
     battle()
 }
 function battle(){
-    //fire wins plant, plant wins watter, watter wins fire
-    if (attackplayer==attackopponent)
-        messagebattle('EMPATE')
-    else if ((attackplayer=='FUEGO' && attackopponent=='PLANTA') || (attackplayer=='PLANTA' && attackopponent=='AGUA') || (attackplayer=='AGUA' && attackopponent=='FUEGO')){
-        messagebattle('GANASTE')
-        opponetlives=reduceSizeLives('lives-opponent',opponetlives)
+    if (attacksplayer.length === maxgames && attacksopponent.length===maxgames){
+        for (let index = 0; index < attacksplayer.length; index++) {
+            //fire wins plant, plant wins watter, watter wins fire
+            if (attacksplayer[index]==attacksopponent[index])
+                messagebattle('EMPATE',attacksplayer[index],attacksopponent[index])
+            else if ((attacksplayer[index]=='FUEGO' && attacksopponent[index]=='PLANTA') || (attacksplayer[index]=='PLANTA' && attacksopponent[index]=='AGUA') || (attacksplayer[index]=='AGUA' && attacksopponent[index]=='FUEGO')){
+                messagebattle('GANASTE',attacksplayer[index],attacksopponent[index])
+                opponentMokepon.lives=reduceSizeLives('lives-opponent',opponentMokepon.lives,opponentMokepon.maxlives)
+                playerVictories++
+            }
+            else{
+                messagebattle('PERDISTE',attacksplayer[index],attacksopponent[index])
+                playerMokepon.lives=reduceSizeLives('lives-player',playerMokepon.lives,playerMokepon.maxlives)
+                opponentVictories++
+            }
+            index=checkHealth(index)
+        }
+        checkVictories()
     }
-    else{
-        messagebattle('PERDISTE')
-        playerlives=reduceSizeLives('lives-player',playerlives)
-    }
-    checkHealth()
 }
-function reduceSizeLives(idbarlives,lives){
+function reduceSizeLives(idbarlives,lives,maxlives){
     let barlives=document.getElementById(idbarlives)
     let sizelives
     sizelives=parseInt(barlives.style.width)
@@ -155,13 +188,26 @@ function reduceSizeLives(idbarlives,lives){
         barlives.style.backgroundColor='#DA1212'
     return lives
 }
-function messagebattle(resultbattle){
-    message= attackplayer + ' - ' + resultbattle + ' - ' + attackopponent
+function messagebattle(resultbattle, attackplayer,attackopponent){
+    message= attackplayer + ' | ' + resultbattle + ' | ' + attackopponent
     createmessage('battle-result',message)
 }
-function checkHealth(){
-    if (playerlives==0 || opponetlives==0){
-        if (opponetlives==0)
+function checkHealth(index){
+    if (playerMokepon.lives==0 || opponentMokepon.lives==0){
+        if (opponentMokepon.lives==0)
+            createmessage('battle-arena-result','Felcitaciones!! GANASTE!!')
+        else
+            createmessage('battle-arena-result','Lo siento!!, Perdiste!!')
+        endBattle()
+        index=maxgames
+    }
+    return index
+}
+function checkVictories(){
+    if (buttonRestart.style.visibility=="hidden"){
+        if (playerVictories===opponentVictories)
+            createmessage('battle-arena-result','Esto fue un EMPATE!!')
+        else if (playerVictories>opponentVictories)
             createmessage('battle-arena-result','Felcitaciones!! GANASTE!!')
         else
             createmessage('battle-arena-result','Lo siento!!, Perdiste!!')
@@ -169,11 +215,8 @@ function checkHealth(){
     }
 }
 function endBattle(){
-    buttonfire.disabled = true
-    buttonwatter.disabled = true
-    buttonplant.disabled = true
     //enable restart game
-    buttonRestart.disabled= false
+    buttonRestart.style.visibility="visible"
 }
 function createmessage(idmessage,message){
     let sectionmessage=document.getElementById(idmessage)
