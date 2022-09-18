@@ -57,7 +57,7 @@ body{
 #button-mokepon, #button-restart{
     margin-top: 20px; 
 }
-#button-mokepon, .button-attack, #button-restart{
+#button-mokepon, .button-attack, #button-restart, .buttonMove{
     background:transparent;
     border: 2px solid #FFE5B4;
     border-radius: 20px;
@@ -65,13 +65,16 @@ body{
     font-family: 'DynaPuff', cursive;
     padding: 10px;
 }
-#battle-arena{
+#view-map, #battle-arena{
     align-items: center;
     display: flex;
     flex-direction: column;
     justify-content:center;
 }
-.button-attack{
+#map{
+    border: 2px solid white;
+}
+.buttonMove, .button-attack{
     font-size: 24px;
 }
 #battle-arena-result, #battle-result{

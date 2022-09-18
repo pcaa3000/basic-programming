@@ -10,6 +10,10 @@ const imgMokeponOpponent= document.getElementById('img-mokepon-opponent')
 const contentMokepon=document.getElementById('content-mokepon')
 const contentAttacks=document.getElementById('content-attacks')
 
+const sectionMap=document.getElementById('view-map')
+const map=document.getElementById('map')
+
+const maxmapwidth=350
 const maxbarlives=100
 const maxgames=5
 let mokepons=[]
@@ -19,67 +23,84 @@ let playerMokepon
 let opponentMokepon
 let playerVictories=0
 let opponentVictories=0
+let interval
+let canvas=map.getContext("2d")
+let mapwidth=window.innerWidth-20
+if (mapwidth>maxmapwidth) 
+    mapwidth=maxmapwidth-20
+map.width=mapwidth
+map.height=mapwidth*600/800
 
 class Mokepon{
-    constructor(name,image,lives){
+    constructor(name,image,lives,imagemap=image){
         this.name=name
         this.image = image
         this.lives= lives
         this.maxlives=lives
         this.attacks=[]
+        this.pictureMap=new Image(40,40)
+        this.pictureMap.src=imagemap
+        this.positionx=randomnumber(0,map.width-this.pictureMap.width)
+        this.positiony=randomnumber(0,map.height-this.pictureMap.height)
+        this.speedx=0
+        this.speedy=0
+    }
+    drawMokepon(px=this.positionx,py=this.positiony){
+        canvas.drawImage(this.pictureMap,px,py,this.pictureMap.width,this.pictureMap.height)
     }
 }
-let hipodoge = new Mokepon('Hipodoge', './assets/mokepons_mokepon_hipodoge_attack.png', 5)
-let capipepo = new Mokepon('Capipepo', './assets/mokepons_mokepon_capipepo_attack.png', 5)
-let ratigueya = new Mokepon('Ratigueya', './assets/mokepons_mokepon_ratigueya_attack.png', 5)
-let pydos = new Mokepon('Pydos', './assets/mokepons_mokepon_pydos_attack.png', 5)
-let tucapalma = new Mokepon('Tucapalma', './assets/mokepons_mokepon_tucapalma_attack.png', 5)
-let langostelvis = new Mokepon('Langostelvis', './assets/mokepons_mokepon_langostelvis_attack.png', 5)
+let hipodoge = new Mokepon('Hipodoge', '../assets/mokepons_mokepon_hipodoge_attack.png', 5,'../assets/hipodoge.png')
+let capipepo = new Mokepon('Capipepo', '../assets/mokepons_mokepon_capipepo_attack.png', 5,'../assets/capipepo.png')
+let ratigueya = new Mokepon('Ratigueya', '../assets/mokepons_mokepon_ratigueya_attack.png', 5,'../assets/ratigueya.png')
+let pydos = new Mokepon('Pydos', '../assets/mokepons_mokepon_pydos_attack.png', 5)
+let tucapalma = new Mokepon('Tucapalma', '../assets/mokepons_mokepon_tucapalma_attack.png', 5)
+let langostelvis = new Mokepon('Langostelvis', '../assets/mokepons_mokepon_langostelvis_attack.png', 5)
 
 hipodoge.attacks.push(
-    {name:'💧', id:'button-watter',desc:'AGUA'},
-    {name:'💧', id:'button-watter',desc:'AGUA'},
-    {name:'💧', id:'button-watter',desc:'AGUA'},
+    {name:'💧', id:'button-watter1',desc:'AGUA'},
+    {name:'💧', id:'button-watter2',desc:'AGUA'},
+    {name:'💧', id:'button-watter3',desc:'AGUA'},
     {name:'🔥', id:'button-fire',desc:'FUEGO'},
     {name:'🌱', id:'button-plant',desc:'PLANTA'},
 )
 capipepo.attacks.push(
-    {name:'🌱', id:'button-plant',desc:'PLANTA'},
-    {name:'🌱', id:'button-plant',desc:'PLANTA'},
-    {name:'🌱', id:'button-plant',desc:'PLANTA'},
+    {name:'🌱', id:'button-plant1',desc:'PLANTA'},
+    {name:'🌱', id:'button-plant2',desc:'PLANTA'},
+    {name:'🌱', id:'button-plant3',desc:'PLANTA'},
     {name:'💧', id:'button-watter',desc:'AGUA'},
     {name:'🔥', id:'button-fire',desc:'FUEGO'},
 )
 ratigueya.attacks.push(
-    {name:'🔥', id:'button-fire',desc:'FUEGO'},
-    {name:'🔥', id:'button-fire',desc:'FUEGO'},
-    {name:'🔥', id:'button-fire',desc:'FUEGO'},
+    {name:'🔥', id:'button-fire1',desc:'FUEGO'},
+    {name:'🔥', id:'button-fire2',desc:'FUEGO'},
+    {name:'🔥', id:'button-fire3',desc:'FUEGO'},
     {name:'💧', id:'button-watter',desc:'AGUA'},
     {name:'🌱', id:'button-plant',desc:'PLANTA'},
 )
 pydos.attacks.push(
-    {name:'💧', id:'button-watter',desc:'AGUA'},
-    {name:'💧', id:'button-watter',desc:'AGUA'},
-    {name:'💧', id:'button-watter',desc:'AGUA'},
+    {name:'💧', id:'button-watter1',desc:'AGUA'},
+    {name:'💧', id:'button-watter2',desc:'AGUA'},
+    {name:'💧', id:'button-watter3',desc:'AGUA'},
     {name:'🔥', id:'button-fire',desc:'FUEGO'},
     {name:'🌱', id:'button-plant',desc:'PLANTA'},
 )
 tucapalma.attacks.push(
-    {name:'🌱', id:'button-plant',desc:'PLANTA'},
-    {name:'🌱', id:'button-plant',desc:'PLANTA'},
-    {name:'🌱', id:'button-plant',desc:'PLANTA'},
+    {name:'🌱', id:'button-plant1',desc:'PLANTA'},
+    {name:'🌱', id:'button-plant2',desc:'PLANTA'},
+    {name:'🌱', id:'button-plant3',desc:'PLANTA'},
     {name:'💧', id:'button-watter',desc:'AGUA'},
     {name:'🔥', id:'button-fire',desc:'FUEGO'},
 )
 langostelvis.attacks.push(
-    {name:'🔥', id:'button-fire',desc:'FUEGO'},
-    {name:'🔥', id:'button-fire',desc:'FUEGO'},
-    {name:'🔥', id:'button-fire',desc:'FUEGO'},
+    {name:'🔥', id:'button-fire1',desc:'FUEGO'},
+    {name:'🔥', id:'button-fire2',desc:'FUEGO'},
+    {name:'🔥', id:'button-fire3',desc:'FUEGO'},
     {name:'💧', id:'button-watter',desc:'AGUA'},
     {name:'🌱', id:'button-plant',desc:'PLANTA'},
 )
 mokepons.push(hipodoge,capipepo,ratigueya,pydos,tucapalma,langostelvis)
 function startGame(){
+    sectionMap.style.display = 'none'
     sectionBattleArena.style.display = 'none'
     mokepons.forEach((mokepon) =>{
         let mokeponoptions=`
@@ -102,9 +123,13 @@ function choosePlayerMokepon(){
     inputmokepons.forEach((inputmokepon)=>{
         if (inputmokepon.checked){
             inputcheck=true
+            //playerMokepon=mokepons[index]
+            playerMokepon=Object.assign(Object.create(Object.getPrototypeOf(mokepons[index])), mokepons[index])
             sectionChooseMokepon.style.display = 'none'
-            sectionBattleArena.style.display = 'flex'
-            playerMokepon=mokepons[index]
+            sectionMap.style.display = 'flex'
+            playerMokepon.positionx=randomnumber(0,map.width-playerMokepon.pictureMap.width)
+            playerMokepon.positiony=randomnumber(0,map.height-playerMokepon.pictureMap.height)            
+            playerMokepon.pictureMap.style.border='1px solid #1F4690'
             spanMokeponPlayer.innerHTML = playerMokepon.name
             imgMokeponPlayer.alt = playerMokepon.name
             imgMokeponPlayer.src=playerMokepon.image            
@@ -114,10 +139,97 @@ function choosePlayerMokepon(){
         index++    
     })
     if (inputcheck)
-        chooseOpponentMokepon()
+        startMap()
+//      chooseOpponentMokepon()
     else
         alert('Selecciona un mokepon')
 }
+//map
+function startMap(){
+    //map.width=320
+    //map.height=240
+    interval=setInterval(drawMap,50)
+    window.addEventListener('keydown',moveMokepon)
+    window.addEventListener('keyup',StopWalking)
+}
+function drawMap(){
+    playerMokepon.positionx+=playerMokepon.speedx
+    playerMokepon.positiony+=playerMokepon.speedy
+    let backgroundmap=new Image()
+    backgroundmap.src='../assets/mokemap.png'
+    canvas.clearRect(0,0,map.width,map.height)
+    canvas.drawImage(backgroundmap,0,0,map.width,map.height)
+    playerMokepon.drawMokepon()
+    mokepons.forEach(mokepon => {
+        mokepon.drawMokepon()
+    });
+    //check confrontation
+    if (playerMokepon.speedx!==0 || playerMokepon.speedy!==0){
+        mokepons.forEach(mokepon => {
+            checkConfrontation(mokepon)
+        });
+    }
+}
+function moveMokepon(event){
+    switch (event.key){
+        case 'ArrowUp':
+            GoUp()
+            break
+        case 'ArrowDown':
+            GoDown()
+            break
+        case 'ArrowLeft':
+            GoLeft()
+            break
+        case 'ArrowRight':
+            GoRight()
+            break
+        default:
+            break
+    }
+}
+function GoUp(){
+    if (playerMokepon.positiony>0)
+        playerMokepon.speedy=-5
+    else
+        StopWalking()    
+}
+function GoLeft(){
+    if (playerMokepon.positionx>0)
+        playerMokepon.speedx=-5
+    else
+        StopWalking()
+}
+function GoDown(){
+    if (playerMokepon.positiony<map.height-playerMokepon.pictureMap.height)
+        playerMokepon.speedy=5
+    else
+        StopWalking()
+}
+function GoRight(){
+    if (playerMokepon.positionx<map.width-playerMokepon.pictureMap.width)
+        playerMokepon.speedx=5
+    else
+        StopWalking()
+}
+function StopWalking(){
+    playerMokepon.speedx=0
+    playerMokepon.speedy=0
+}
+function checkConfrontation(mokepon){
+    //console.log(playerMokepon)
+    //console.log(mokepon)
+    if (playerMokepon.positionx>mokepon.positionx+mokepon.pictureMap.width || playerMokepon.positionx+playerMokepon.pictureMap.width < mokepon.positionx || playerMokepon.positiony > mokepon.positiony+mokepon.pictureMap.height || playerMokepon.positiony+playerMokepon.pictureMap.height>=mokepon)
+        return
+    StopWalking()
+    clearInterval(interval)
+    //console.log('new confrontation')
+    sectionBattleArena.style.display = 'flex'
+    sectionMap.style.display = 'none'
+    chooseOpponentMokepon(mokepon)
+}
+//
+//attacks
 function showAttacks(attacks){
     attacks.forEach((attack) =>{
         let mokeponAttacks=`
@@ -137,9 +249,12 @@ function sequenceAttacks(){
         })
     })
 }
-function chooseOpponentMokepon(){
-    let mokeponRandomnumber = randomnumber(0,mokepons.length-1)
-    opponentMokepon=mokepons[mokeponRandomnumber]
+function chooseOpponentMokepon(mokepon){
+    if (!mokepon){
+        let mokeponRandomnumber = randomnumber(0,mokepons.length-1)
+        mokepon=mokepons[mokeponRandomnumber]
+    }
+    opponentMokepon=mokepon
     spanMokeponOpponent.innerHTML = opponentMokepon.name
     imgMokeponOpponent.alt=opponentMokepon.name
     imgMokeponOpponent.src=opponentMokepon.image
@@ -147,6 +262,7 @@ function chooseOpponentMokepon(){
 }
 function opponentRandomAttack(){
     let attackindex=randomnumber(0,opponentMokepon.attacks.length-1)
+    //console.log(attackindex)
     attacksopponent.push(opponentMokepon.attacks[attackindex].desc)
     opponentMokepon.attacks.splice(attackindex,1)
     battle()
