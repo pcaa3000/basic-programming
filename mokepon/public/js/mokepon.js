@@ -13,10 +13,13 @@ const contentAttacks=document.getElementById('content-attacks')
 const sectionMap=document.getElementById('view-map')
 const map=document.getElementById('map')
 
+const baseURL='http://localhost:8080'
 const maxmapwidth=350
 const maxbarlives=100
 const maxgames=5
+let playerid
 let mokepons=[]
+let opponentmokepons=[]
 let attacksplayer=[]
 let attacksopponent=[]
 let playerMokepon
@@ -32,7 +35,7 @@ map.width=mapwidth
 map.height=mapwidth*600/800
 
 class Mokepon{
-    constructor(name,image,lives,imagemap=image){
+    constructor(name,image,lives,imagemap=image,master=null){
         this.name=name
         this.image = image
         this.lives= lives
@@ -44,6 +47,7 @@ class Mokepon{
         this.positiony=randomnumber(0,map.height-this.pictureMap.height)
         this.speedx=0
         this.speedy=0
+        this.master=master
     }
     drawMokepon(px=this.positionx,py=this.positiony){
         canvas.drawImage(this.pictureMap,px,py,this.pictureMap.width,this.pictureMap.height)
@@ -115,6 +119,20 @@ function startGame(){
     buttonPlayerMokepon.addEventListener('click', choosePlayerMokepon)
     buttonRestart.style.visibility="hidden"
     buttonRestart.addEventListener('click', restartGame)
+    joinGame()
+}
+function joinGame(){
+    fetch(baseURL+'/join')
+        .then(response => {
+            console.log(response)
+            if (response.ok){
+                response.text()
+                    .then(answer => {
+                        playerid=answer
+                        console.log(answer)
+                    })
+            }
+        })
 }
 function choosePlayerMokepon(){
     let inputcheck=false
@@ -138,11 +156,19 @@ function choosePlayerMokepon(){
         }    
         index++    
     })
-    if (inputcheck)
+    if (inputcheck){
+        setMokepon_Player()
         startMap()
 //      chooseOpponentMokepon()
-    else
+    } else
         alert('Selecciona un mokepon')
+}
+function setMokepon_Player() {
+    fetch(baseURL+`/mokepon/${playerid}`,{
+        method: "POST",
+        headers: { "Content-Type":"application/json"},
+        body: JSON.stringify({mokepon: playerMokepon.name})
+    })
 }
 //map
 function startMap(){
@@ -160,15 +186,46 @@ function drawMap(){
     canvas.clearRect(0,0,map.width,map.height)
     canvas.drawImage(backgroundmap,0,0,map.width,map.height)
     playerMokepon.drawMokepon()
-    mokepons.forEach(mokepon => {
+    sendPosition(playerMokepon.positionx,playerMokepon.positiony)
+    opponentmokepons.forEach(mokepon => {
         mokepon.drawMokepon()
+        //checkConfrontation(mokepon)
     });
     //check confrontation
     if (playerMokepon.speedx!==0 || playerMokepon.speedy!==0){
-        mokepons.forEach(mokepon => {
+        opponentmokepons.forEach(mokepon => {
             checkConfrontation(mokepon)
         });
     }
+}
+function sendPosition(x,y) {
+    fetch(`${baseURL}/mokepon/${playerid}/position`,{
+        method: "post",
+        headers: { "Content-Type":"application/json"},
+        body: JSON.stringify({ x,y })
+    })
+    .then(response => {
+        if (response.ok){
+            response.json()
+                .then(({opponents}) => {
+                    console.log(opponents)
+                    opponentmokepons=opponents.map(opponent => {
+                        mokeponName=opponent.mokepon.name || ""
+                        //opponentMokepon=mokepons.find(mokepon => mokepon.name === mokeepName)
+                        mokepons.forEach(mokepon => {
+                            if (mokepon.name===mokeponName){
+                                opponentMokepon=Object.assign(Object.create(Object.getPrototypeOf(mokepon)), mokepon)
+                        //        return
+                            }
+                        })
+                        opponentMokepon.positionx=opponent.x
+                        opponentMokepon.positiony=opponent.y
+                        opponentMokepon.master=opponent.id
+                        return opponentMokepon
+                    })
+                })
+        }
+    })
 }
 function moveMokepon(event){
     switch (event.key){
@@ -223,6 +280,7 @@ function checkConfrontation(mokepon){
         return
     StopWalking()
     clearInterval(interval)
+    opponentid=mokepon.master
     //console.log('new confrontation')
     sectionBattleArena.style.display = 'flex'
     sectionMap.style.display = 'none'
@@ -245,7 +303,9 @@ function sequenceAttacks(){
             attacksplayer.push(buttonAttack.value)
             buttonAttack.style.background='#001D6E'
             buttonAttack.disabled=true
-            opponentRandomAttack()
+            //opponentRandomAttack()
+            if (attacksplayer.length === maxgames)
+                sendAttacks()
         })
     })
 }
@@ -260,6 +320,28 @@ function chooseOpponentMokepon(mokepon){
     imgMokeponOpponent.src=opponentMokepon.image
     sequenceAttacks()        
 }
+function sendAttacks() {
+    fetch(baseURL+ `/mokepon/${playerid}/attacks`, {
+        method: 'POST',
+        headers: { "Content-Type" : "application/json" },
+        body: JSON.stringify({ attacks: attacksplayer })
+    })
+    interval=setInterval(getAttacks,50)
+}
+function getAttacks() {
+    fetch(baseURL+`/mokepon/${opponentid}/attacks`)
+        .then(response => {
+            if (response.ok){
+                response.json()
+                    .then(({attacks}) => {
+                        if (attacks.length === maxgames){
+                            attacksopponent=attacks
+                            battle()
+                        }
+                    })
+            }
+        })
+}
 function opponentRandomAttack(){
     let attackindex=randomnumber(0,opponentMokepon.attacks.length-1)
     //console.log(attackindex)
@@ -268,6 +350,7 @@ function opponentRandomAttack(){
     battle()
 }
 function battle(){
+    clearInterval(interval)
     if (attacksplayer.length === maxgames && attacksopponent.length===maxgames){
         for (let index = 0; index < attacksplayer.length; index++) {
             //fire wins plant, plant wins watter, watter wins fire
